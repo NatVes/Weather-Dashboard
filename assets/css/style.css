@@ -1,0 +1,28 @@
+.weather-header {
+    background-image: linear-gradient(to left, #200A49, #3663B7);
+}
+
+.forecast-card {
+    background-color: #3E546B;
+    color: white;
+}
+
+#search-button {
+    background-image: linear-gradient(to left, #3663B7, #5397E1);
+    color: white;  
+    transition: transform 0.3s;  
+}
+
+#search-button:hover {
+    transform: scale(0.98);
+}
+
+#history button {
+    background-color: #AEAEAE;
+    color: #292929;
+    transition: filter 0.3s;
+}
+
+#history button:hover {
+    filter: brightness(80%);
+}
