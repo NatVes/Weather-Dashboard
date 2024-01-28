@@ -24,7 +24,7 @@ $("#search-button").on("click", function(event) {
                 })
                 .then(function(data) {  
                     console.log(data);                  
-                    let currentDate = dayjs.unix(data.dt).format("DD/M/YYYY H:m");
+                    let currentDate = dayjs.unix(data.dt).format("DD/M/YYYY");
                     $("#today").text("");
                     $("#today").append(`<div class="border border-1 border-dark p-2">
                                         <h3>${data.name} (${currentDate})</h3>
