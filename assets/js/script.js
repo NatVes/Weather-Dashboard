@@ -4,11 +4,28 @@ const APIkey = "e57eb02252a8e563b6e486b7febc7d1c";
 let buttons = [];
 const numberBtns = 6;
 
+checkAdd();
+
 $("#search-button").on("click", function(event) {
     event.preventDefault();  
     
     let cityName = $(this).prev().val().trim();    
 
+    totalFetch(cityName);
+
+    let btnCity = upperFirstLetter(cityName);   
+    pushBtn(btnCity);
+    renderBtn();
+    $("#search-input").val("");   
+});
+
+$("#history").on("click", ".user-button", function(event) {
+    event.preventDefault();
+    let cityName = $(this).text().trim(); 
+    totalFetch(cityName);
+});
+
+function totalFetch(cityName) {
     let locationURL = `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&appid=${APIkey}`;
 
     fetch(locationURL)
@@ -35,10 +52,7 @@ $("#search-button").on("click", function(event) {
                                         <p>Temp: ${(data.main.temp - 273.15).toFixed(2)} °C</p>
                                         <p>Wind: ${data.wind.speed} KPH</p>
                                         <p>Humidity: ${data.main.humidity} %</p>
-                                        </div>`);   
-                                        
-                    let btnCity = $("span[data-name]").text();    
-                    renderBtn(btnCity);                    
+                                        </div>`);                                          
                 });
             
             let forecastURL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${APIkey}`;
@@ -61,7 +75,7 @@ $("#search-button").on("click", function(event) {
                         let forecastDate = dayjs(targetObj.dt_txt).format("DD/M/YYYY");
                         let forecastImg = targetObj.weather[0].icon;
                         console.log(targetObj);
-                        $("#forecast").append(`<div class="col bg-secondary p-1">
+                        $("#forecast").append(`<div class="col-md p-1 mb-4 forecast-card">
                                                 <h5>${forecastDate}</h5>
                                                 <img src="https://openweathermap.org/img/wn/${forecastImg}@2x.png" width="50px" height="50px"/>
                                                 <p>Temp: ${(targetObj.main.temp - 273.15).toFixed(2)} °C</p>
@@ -71,12 +85,14 @@ $("#search-button").on("click", function(event) {
                         nextDate = nextDate.add(1, "day");
                     }    
                 });            
-        });       
-    
-    $("#search-input").val("");   
-})
+        }); 
+}
 
-function renderBtn(name) {
+function upperFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function pushBtn(name) {
     $("#history").empty();   
 
     if(name && !buttons.includes(name)) {
@@ -84,15 +100,29 @@ function renderBtn(name) {
         if(buttons.length > numberBtns) {
             buttons = buttons.slice(0, numberBtns);
         }
-    } else if(buttons.includes(name)) {
-        alert("This city is already on the list")
+    } else if(buttons.includes(name)) {        
+        return;
     } else {
-        alert("Enter the name of the city")
-    };
+        alert("Enter the name of the city")        
+    };   
 
+    storeUserData();
+}
 
-    
-    
-    console.log(buttons)
+function renderBtn() {
+    for (let i=0; i<buttons.length; i++) {
+        $("#history").append(`<button type="submit" class="btn mb-3 user-button">${buttons[i]}</button>`)
+    }    
+}
 
+function storeUserData () {
+    localStorage.setItem("buttons", JSON.stringify(buttons));
+}
+
+function checkAdd() {    
+    let storedData = JSON.parse(localStorage.getItem("buttons"));    
+    if (storedData !== null) {
+        buttons = storedData;
+    }
+    renderBtn()
 }
