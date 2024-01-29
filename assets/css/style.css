@@ -2,7 +2,7 @@
     background-image: linear-gradient(to left, #200A49, #3663B7);
 }
 
-.forecast-card {
+#forecast .forecast-card {
     background-color: #3E546B;
     color: white;
 }

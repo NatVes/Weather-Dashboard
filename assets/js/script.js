@@ -7,26 +7,26 @@ const numberBtns = 6;
 checkAdd();
 
 $("#search-button").on("click", function(event) {
-    event.preventDefault();  
+    event.preventDefault(); 
     
-    let cityName = $(this).prev().val().trim();    
-
+    let cityName = $(this).prev().val().trim(); 
     totalFetch(cityName);
 
     let btnCity = upperFirstLetter(cityName);   
     pushBtn(btnCity);
     renderBtn();
+
     $("#search-input").val("");   
 });
 
 $("#history").on("click", ".user-button", function(event) {
     event.preventDefault();
-    let cityName = $(this).text().trim(); 
-    totalFetch(cityName);
+    let btnName = $(this).text().trim(); 
+    totalFetch(btnName);
 });
 
-function totalFetch(cityName) {
-    let locationURL = `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&appid=${APIkey}`;
+function totalFetch(city) {
+    let locationURL = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&appid=${APIkey}`;
 
     fetch(locationURL)
         .then(function(response) {
@@ -42,13 +42,12 @@ function totalFetch(cityName) {
                 .then(function(result) {            
                     return result.json();
                 })
-                .then(function(data) {     
-                    console.log(data);                                   
+                .then(function(data) {                                                      
                     let currentDate = dayjs.unix(data.dt).format("DD/M/YYYY");
                     let todayImg = data.weather[0].icon;
                     $("#today").text("");
-                    $("#today").append(`<div class="border border-1 border-dark p-2">
-                                        <h3><span data-name="${data.name}">${data.name}</span> (${currentDate}) <img src="https://openweathermap.org/img/wn/${todayImg}@2x.png" width="50px" height="50px"/></h3>
+                    $("#today").append(`<div class="card border border-1 border-dark p-2">
+                                        <h3>${data.name} (${currentDate}) <img src="https://openweathermap.org/img/wn/${todayImg}@2x.png" width="50px" height="50px"/></h3>
                                         <p>Temp: ${(data.main.temp - 273.15).toFixed(2)} °C</p>
                                         <p>Wind: ${data.wind.speed} KPH</p>
                                         <p>Humidity: ${data.main.humidity} %</p>
@@ -64,37 +63,49 @@ function totalFetch(cityName) {
                 .then(function(data) {
                     $("#forecast").text("");
                     $("#forecast").append(`<h4 class="px-0">5-Day Forecast:</h4>`);
-                    console.log(data);
-                    let currentDate = dayjs();
-                    let nextDate = currentDate.add(1, "day");
                     
-                    for (let i=0; i<5; i++) {
-                        nextDate;
-                        let targetDate = `${nextDate.format("YYYY-MM-DD")} 12:00:00`;
-                        let targetObj = data.list.find(obj => obj.dt_txt === targetDate);
-                        let forecastDate = dayjs(targetObj.dt_txt).format("DD/M/YYYY");
-                        let forecastImg = targetObj.weather[0].icon;
-                        console.log(targetObj);
-                        $("#forecast").append(`<div class="col-md p-1 mb-4 forecast-card">
-                                                <h5>${forecastDate}</h5>
-                                                <img src="https://openweathermap.org/img/wn/${forecastImg}@2x.png" width="50px" height="50px"/>
-                                                <p>Temp: ${(targetObj.main.temp - 273.15).toFixed(2)} °C</p>
-                                                <p>Wind: ${targetObj.wind.speed} KPH</p>
-                                                <p>Humidity: ${targetObj.main.humidity} %</p>
-                                                </div>`);
-                        nextDate = nextDate.add(1, "day");
-                    }    
-                });            
-        }); 
+                    let dateList = [];
+                    for (let i=5; i>0; i--) {
+                        let nextDate = data.list.find(obj => obj.dt === getNextDay(i, 12));
+                        let altDate = data.list.find(obj => obj.dt === getNextDay(i, 0));
+                        if (nextDate) {                            
+                            dateList.unshift(nextDate); 
+                        } else {                            
+                            dateList.unshift(altDate);
+                        }                            
+                    }                    
+                    
+                    for (let i=0; i<dateList.length; i++) {
+                        let forecastDate = dayjs.unix(dateList[i].dt).format("DD/M/YYYY");
+                        let forecastImg = dateList[i].weather[0].icon;
+                        
+                        $("#forecast").append(`<div class="forecast-card card col-md p-1 mb-4">
+                                            <h5>${forecastDate}</h5>
+                                            <img src="https://openweathermap.org/img/wn/${forecastImg}@2x.png" width="50px" height="50px"/>
+                                            <p>Temp: ${(dateList[i].main.temp - 273.15).toFixed(2)} °C</p>
+                                            <p>Wind: ${dateList[i].wind.speed} KPH</p>
+                                            <p>Humidity: ${dateList[i].main.humidity} %</p>
+                                            </div>`);
+                    }                        
+                });
+        });            
+    }
+
+function getNextDay(day, hour) {
+    let next = dayjs().add(day, 'day').hour(hour).startOf('hour').unix();
+    return next;
 }
 
 function upperFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+    const words = str.split(" ");
+    const capWords = words.map(word => {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    const result = capWords.join(" ");
+    return result;
 }
 
 function pushBtn(name) {
-    $("#history").empty();   
-
     if(name && !buttons.includes(name)) {
         buttons.unshift(name);
         if(buttons.length > numberBtns) {
@@ -110,12 +121,13 @@ function pushBtn(name) {
 }
 
 function renderBtn() {
+    $("#history").empty(); 
     for (let i=0; i<buttons.length; i++) {
         $("#history").append(`<button type="submit" class="btn mb-3 user-button">${buttons[i]}</button>`)
     }    
 }
 
-function storeUserData () {
+function storeUserData() {
     localStorage.setItem("buttons", JSON.stringify(buttons));
 }
 
